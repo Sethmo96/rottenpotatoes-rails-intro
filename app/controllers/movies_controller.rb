@@ -12,7 +12,7 @@ class MoviesController < ApplicationController
 
   def index
     @movies = Movie.all
-    sort = params[:sort]
+    sort = params[:sort] || session[:sort]
     case sort
       when 'title'
         ordering,@title_header = {:order => :title}, 'hilite'
@@ -22,7 +22,10 @@ class MoviesController < ApplicationController
         @movies = Movie.order('release_date ASC')
     end
     
-    
+    if params[:sort] != session[:sort]
+      session[:sort] = sort
+      redirect_to movies_path(:sort => sort)
+    end
   end
 
   def new
