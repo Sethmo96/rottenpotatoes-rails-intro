@@ -11,33 +11,25 @@ class MoviesController < ApplicationController
   end
 
   def index
-   @all_ratings = Movie.ratings
-    @movies = Movie.all
-    @ratings_hash = Hash[*@all_ratings.map {|key| [key, 1]}.flatten]
-    
-    if (params[:session] == "clear")
-      session[:sort] = nil
-      session[:ratings] = nil
-    end
-    
-    if (params[:ratings] != nil)
-      @ratings_hash = params[:ratings]
-      @movies = @movies.where(:rating => @ratings_hash.keys)
-      session[:ratings] = @ratings_hash
-    end
-    
-    if (params[:sort] != nil)
-      case params[:sort]
-      when "title"
-        @movies = @movies.order(:title)
-        @class_title = "hilite"
-        session[:sort] = "title"
-      when "release_date"
-        @movies = @movies.order(:release_date)
-        @class_release_date = "hilite"
-        session[:sort] = "release_date"
+    @all_ratings = Movie.ratings
+    session[:ratings] = params[:ratings] unless params[:ratings].nil?
+    session[:sort] = params[:sort] unless params[:sort].nil?
+
+    if (params[:ratings].nil? && !session[:ratings].nil?) || (params[:sort].nil? && !session[:sort].nil?)
+      redirect_to movies_path("ratings" => session[:ratings], "sort" => session[:sort])
+    elsif !params[:ratings].nil? || !params[:sort].nil?
+      if !params[:ratings].nil?
+        array_ratings = params[:ratings].keys
+        return @movies = Movie.where(rating: array_ratings).order(session[:sort])
+      else
+        return @movies = Movie.all.order(session[:sort])
       end
+    elsif !session[:ratings].nil? || !session[:sort].nil?
+      redirect_to movies_path("ratings" => session[:ratings], "sort" => session[:sort])
+    else
+      return @movies = Movie.all
     end
+    
   end
 
   def new
